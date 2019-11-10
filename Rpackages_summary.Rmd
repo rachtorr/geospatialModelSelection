@@ -1,0 +1,137 @@
+---
+title: "geo spatial stats packages summary"
+date: "11/5/2019"
+output: html_document
+---
+
+```{r setup, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(RandomFields)
+library(gstat)
+library(sp)
+library(kriging)
+library(SpatialExtremes)
+```
+
+This is a quick summary of the options we have for running statistical models on spatial data. These packages were selected based on suggestions from the class or by doing a google search. I've included links to more helpful tutorials and CRAN vignettes.  
+
+## RandomFields
+
+Simulation and analysis of random fields: Methods for the inference on and the simulation of Gaussian fields are provided, as well as methods for the simulation of extreme value random fields.
+
+[CRAN](https://cran.r-project.org/web/packages/RandomFields/RandomFields.pdf) 
+
+[R Documentation](https://www.rdocumentation.org/packages/RandomFields/versions/3.1.36)
+
+Journal Article summarizing package capabilities, including example with weather data:
+[Analysis, Simulation and Prediction of Multivariate
+Random Fields with Package RandomFields](file:///Volumes/GoogleDrive/My%20Drive/203_sections/v63i08.pdf)
+
+*"RandomFields offers more than 35 dimple models and more than 30 functionals operating on simple models to construct more complex ones"*
+
+While our textbook by Wikle et al. does not use RandomFields, it does mention it: 
+
+*"However, there are numerous other packages in R that could be used. Among these CompRandFld and RandomFields are worth noting because of the large selection of non-separable spatio-temporal covariance functions they make available to the user."*
+
+
+__some functions:__
+
++ __RMmatrix__ multivariate covariance model depending on one multivariate covariance model; matrix multiplication
+
++ __RMbiwm__ Bivariate Whittle-Matern model; corresponding covariance function only depends on the distance r>=0 between two points
+
++ __RFfit__ recognizes all parameters that have the value NA, and estimates them through ML
+
++ __RFratiotest__ approx. chi2 test or Monte Carlo likelihood ratio test; only works for Gaussian random fields 
+
++ __RFcrossvalidate__ fits the model to the complete data set and then the value at each location is predicted by kriging given the data at all other locations 
+
+
+
+Example with temperature and pressure shown below:
+
+```{r cars}
+data('weather') # from RandomFields package
+
+# parsimonious model 
+nug <- RMmatrix(M = matrix(nc = 2, c(NA, 0, 0, NA)), RMnugget())
+pars.model <- nug + RMbiwm(nudiag = c(NA, NA), scale = NA, cdiag = c(NA, NA), rhored = NA)
+
+# transform coords to Euclidean distances 
+Dist.mat <- as.vector(RFearth2dist(weather[, 3:4]))
+
+PT <- weather[ , 1:2]
+#pars <- RFfit(pars.model, distances = Dist.mat, dim = 3, data = PT)
+
+# okay this gave me an error even though I was copy and pasting, might come back to it but tbh don't feel like figuring it out, might come back to it
+```
+
+## gstat
+
+[CRAN](https://cran.r-project.org/web/packages/gstat/index.html)
+
+[interpolation tutorial](https://rspatial.org/raster/analysis/4-interpolation.html)
+
+[tutorial, including variograms](https://cran.r-project.org/web/packages/gstat/vignettes/gstat.pdf)
+
+This package is useful for all spatial data, but especially for our purposes it is a simple way to create variograms and perform Kriging.
+
+[Intro tutorial](https://rpubs.com/nabilabd/118172)
+
+This is the main package used in the textbook by Wikle et al., which can be found on [Gouchospace](http://spacetimewithr.org/). 
+See Lab 4.1 Spatio-Temporal Kriging with gstat. Not going to get into much detail because we have this text available. 
+
+__some functions:__
+
++ __krige__ simple, ordinary, or universal kriging, global or local, point or block 
+
++ __variogram__ calculate sample variogram from data 
+
++ __fit.variogram__ fits a model to sample variogram 
+
++ __vgmST__ constructs one variogram for space and another for time, or can do one jointly, checks for minimal set of parameters 
+
++ __fit.StVariogram__ fits spatio-temporal variogram of a given type of spatio-temporal sample variogram
+
++ __krigeST__ orginary global and local and trans Gaussian spatio-temporal kriging 
+
+## SpatialExtremes
+
+Tools for the statistical modelling of spatial extremes using max-stable processes, copula or Bayesian hierarchical models. The data should be extreme (not daily values), marginal distribution family is fixed, and the process family is fixed.
+
+[CRAN](https://cran.r-project.org/web/packages/SpatialExtremes/SpatialExtremes.pdf)
+
+This [link](https://sites.lsa.umich.edu/eva2015/wp-content/uploads/sites/44/2015/07/EVA2015.pdf) has nice tutorials for Spatial GEV, Bayesian modeling, and Max-stable processes, although I'm not sure how helpful it will be for us. [source.](https://www.stat.washington.edu/peter/PASI/show.pdf)
+
+This [link](https://www.stat.colostate.edu/graybillconference2009/Workshop%20Files/show.pdf) includes a section on **Model Selection**, including performing AIC and likelihood ratio tests.
+
+not sure we need to use this package. 
+
+## kriging
+
+*Simple and highly optomized ordinary kriging algorithm to plot geographical data*
+[CRAN](https://cran.r-project.org/web/packages/kriging/kriging.pdf)
+
+__some functions:__
+
++ __kriging__ ordinary kriging algorithm; assumes a minumum number of observations in order to fit variogram model
+
++ __plot.kriging__ plot distance v. semivariance with a fitted curve that indicates model used 
+
+## CompRandFld
+
+Used with the Random Fields - set of procedures for the analysis of random fields using likelihood and nonstandard likelihood methods. 
+
+[CRAN](https://cran.r-project.org/web/packages/CompRandFld/CompRandFld.pdf)
+
+not as many tutorials available for this one
+
+nice summary article: 
+[Analyzing spatio-temporal data with R:
+Everything you always wanted to know – but were
+afraid to ask](https://informatique-mia.inra.fr/resste/sites/informatique-mia.inra.fr.resste/files/analyzing-spatio-temporal.pdf) 
+they use gstat and CompRandFld to look at air quality data 
+
+
+
